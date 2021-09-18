@@ -24,7 +24,7 @@
 
     .card {
       width: 100%;
-      height: 650px;
+      height: 700px;
     }
 
     input::-webkit-inner-spin-button {
@@ -47,55 +47,9 @@
     }
   </style>
   <script>
-    function validateName() {
-      const nama = document.forms["form_input_siswa"]["nama"].value;
-
-      if (!nama.match("^[a-zA-Z]*$")) {
-        document.getElementById("error_nama").innerHTML = `
-          Nama hanya boleh berisi huruf dan spasi`;
-
-        return false;
-      } else {
-        document.getElementById("error_nama").innerHTML = '';
-      }
-    }
-
-    function validateNis() {
-      const nis = document.forms["form_input_siswa"]["nis"].value;
-      
-      if (!nis.match("^[0-9]*$")) {
-        document.getElementById("error_nis").innerHTML = `
-          Nama hanya boleh berisi angka 0-9`;
-
-        return false;
-      } else {
-        document.getElementById("error_nis").innerHTML = '';
-      }
-    }
-
-    function validateForm() {
-      const jk = document.forms["form_input_siswa"]["jk"].value;
-      const kelas = document.forms["form_input_siswa"]["kelas"].value;
+    function validateEskul() {
       const eskul = document.forms["form_input_siswa"]["eskul[]"];
       let countEskul = 0;
-
-      if (jk == "") {
-        document.getElementById("error_jk").innerHTML = `
-        Pilih jenis kelamin Anda`;
-
-        return false;
-      } else {
-        document.getElementById("error_jk").innerHTML = '';
-      }
-
-      if (kelas == "") {
-        document.getElementById("error_kelas").innerHTML = `
-          Pilih kelas Anda`;
-
-        return false;
-      } else {
-        document.getElementById("error_kelas").innerHTML = '';
-      }
 
       for (let i = 0; i < eskul.length; i++) {
         if (eskul[i].checked == true) {
@@ -115,8 +69,6 @@
         return false;
       }
 
-      return validateNis() && validateName();
-
       return true;
     }
   </script>
@@ -128,16 +80,57 @@
         Form Input Siswa
       </div>
       <div class="card-body">
-        <form method="POST" autocomplete="on" id="form_input_siswa" onsubmit="return validateForm()">
+        <?php 
+          if (isset($_POST["submit"])) {
+            // validasi nis: tidak boleh kosong dan hanya boleh berisi angka
+            $nis = test_input($_POST["nis"]);
+
+            if (empty($nis)) {
+              $error_nis = "NIS harus diisi";
+            } else if (!preg_match("/^[0-9]*$/", $nis)) {
+              $error_nis = "NIS hanya dapat berisi angka 0-9";
+            }
+
+            // validari nama: tidak boleh kosong dan hanya boleh berisi huruf
+            $nama = test_input($_POST["nama"]);
+
+            if (empty($nama)) {
+              $error_nama = "Nama harus diisi";
+            } else if (!preg_match("/^[a-zA-Z ]*$/", $nama)) {
+              $error_nama = "Nama hanya dapat berisi huruf dan spasi";
+            }
+
+            // validasi jenis kelamin: tidak boleh kosong
+            if (empty($_POST["jk"])) {
+              $error_jk = "Jenis kelamin harus dipilih";
+            }
+
+            // validasi kelas: tidak boleh kosong
+            $kelas = test_input($_POST["kelas"]);
+
+            if (empty($kelas)) {
+              $error_kelas = "Kelas harus dipilih";
+            }
+          }
+
+          function test_input($data) {
+            $data = trim($data);
+            $data = stripslashes(($data));
+            $data = htmlspecialchars($data);
+
+            return $data;
+          }
+        ?>
+        <form method="POST" autocomplete="on" id="form_input_siswa" onsubmit="return validateEskul()">
           <div class="mb-3">
             <label for="nis" class="form-label">NIS</label>
-            <input type="text" class="form-control" id="nis" name="nis" maxlength="10" min="0" required onchange="validateNis()">
-            <div id="error_nis" class="error"></div>
+            <input type="text" class="form-control" id="nis" name="nis" maxlength="10" min="0">
+            <div class="error"><?php if (isset($error_nis)) echo $error_nis; ?></div>
           </div>
           <div class="mb-3">
             <label for="nama" class="form-label">Nama</label>
-            <input type="name" class="form-control" id="nama" name="nama" required onchange="validateName()">
-            <div id="error_nama" class="error"></div>
+            <input type="name" class="form-control" id="nama" name="nama">
+            <div class="error"><?php if (isset($error_nama)) echo $error_nama; ?></div>
           </div>
           <div class="mb-3">
             <label>Jenis Kelamin</label>
@@ -147,7 +140,7 @@
               <input type="radio" class="form-check-input" id="jk" name="jk" value="wanita">
               <label class="form-check-label">Wanita</label>
             </div>
-            <div id="error_jk" class="error"></div>
+            <div class="error"><?php if (isset($error_jk)) echo $error_jk; ?></div>
           </div>
           <div class="mb-3">
             <label for="kelas">Kelas:</label>
@@ -157,7 +150,7 @@
               <option value="xi">XI</option>
               <option value="xii">XII</option>
             </select>
-            <div id="error_kelas" class="error"></div>
+            <div id="error_kelas" class="error"><?php if (isset($error_kelas)) echo $error_kelas; ?></div>
           </div>
           <div class="mb-3" id="eskul_element"></div>
           <button type="submit" class="submit btn btn-primary" name="submit">Submit</button>
